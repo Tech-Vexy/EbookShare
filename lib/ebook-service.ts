@@ -136,6 +136,41 @@ export class EbookService {
     }
   }
 
+  // Update category
+  async updateCategory(categoryId: string, categoryData: {
+    name?: string
+    slug?: string
+    description?: string
+    color?: string
+  }): Promise<Category> {
+    try {
+      const response = await databases.updateDocument(DATABASE_ID, CATEGORIES_COLLECTION_ID, categoryId, categoryData)
+      return {
+        name: response.name,
+        slug: response.slug,
+        description: response.description,
+        color: response.color,
+        ebookCount: response.ebookCount,
+        $id: response.$id,
+        $createdAt: response.$createdAt,
+        $updatedAt: response.$updatedAt,
+      }
+    } catch (error) {
+      console.error("Error updating category:", error)
+      throw error
+    }
+  }
+
+  // Delete category
+  async deleteCategory(categoryId: string): Promise<void> {
+    try {
+      await databases.deleteDocument(DATABASE_ID, CATEGORIES_COLLECTION_ID, categoryId)
+    } catch (error) {
+      console.error("Error deleting category:", error)
+      throw error
+    }
+  }
+
   // Get ebooks by user
   async getEbooksByUser(userId: string): Promise<Ebook[]> {
     try {

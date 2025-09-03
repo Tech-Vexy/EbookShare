@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Upload, X, FileText } from "lucide-react"
+import { Loader2, Upload, X, FileText, Plus } from "lucide-react"
+import { CreateCategoryForm } from "@/components/categories/create-category-form"
 import type { Category } from "@/lib/database-schema"
 
 export function UploadForm() {
@@ -46,20 +47,33 @@ export function UploadForm() {
     }
   }
 
+  const handleCategoryCreated = (newCategory: Category) => {
+    setCategories(prev => [...prev, newCategory])
+    setCategoryId(newCategory.$id)
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
       if (selectedFile.type !== "application/pdf") {
         setError("Please select a PDF file")
+        setFile(null)
         return
       }
       if (selectedFile.size > 50 * 1024 * 1024) {
         // 50MB limit
         setError("File size must be less than 50MB")
+        setFile(null)
         return
       }
       setFile(selectedFile)
       setError("")
+      
+      // Auto-populate title if empty
+      if (!title && selectedFile.name) {
+        const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "")
+        setTitle(nameWithoutExt)
+      }
     }
   }
 
@@ -158,7 +172,7 @@ export function UploadForm() {
           {/* File Upload */}
           <div className="space-y-2">
             <Label htmlFor="file">PDF File *</Label>
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center relative">
               {file ? (
                 <div className="flex items-center justify-center space-x-2">
                   <FileText className="h-8 w-8 text-accent" />
@@ -166,24 +180,36 @@ export function UploadForm() {
                     <p className="font-medium">{file.name}</p>
                     <p className="text-sm text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setFile(null)} className="ml-2">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setFile(null)
+                    }} 
+                    className="ml-2"
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
-                <div>
+                <label htmlFor="file" className="cursor-pointer block">
                   <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground mb-2">Click to upload or drag and drop</p>
                   <p className="text-xs text-muted-foreground">PDF files only, max 50MB</p>
-                </div>
+                </label>
               )}
               <input
                 id="file"
                 type="file"
                 accept=".pdf"
                 onChange={handleFileChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                className="sr-only"
                 disabled={loading}
+                title="Select PDF file to upload"
+                aria-label="Select PDF file to upload"
               />
             </div>
           </div>
@@ -231,7 +257,14 @@ export function UploadForm() {
           {/* Category and Metadata */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="category">Category *</Label>
+                <CreateCategoryForm 
+                  onCategoryCreated={handleCategoryCreated}
+                  trigger="button"
+                  className="h-8 px-2 text-xs"
+                />
+              </div>
               <Select value={categoryId} onValueChange={setCategoryId} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
@@ -242,8 +275,18 @@ export function UploadForm() {
                       {category.name}
                     </SelectItem>
                   ))}
+                  {categories.length === 0 && (
+                    <SelectItem value="no-categories" disabled>
+                      No categories available
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
+              {categories.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No categories found. Create one to get started!
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -314,20 +357,46 @@ export function UploadForm() {
             )}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading || !file || !title || !author || !description || !categoryId}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              "Upload Ebook"
-            )}
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={loading || !file || !title || !author || !description || !categoryId}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Upload Ebook"
+              )}
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={(e) => {
+                e.preventDefault()
+                // Reset the entire form
+                setFile(null)
+                setTitle("")
+                setAuthor("")
+                setDescription("")
+                setCategoryId("")
+                setTags([])
+                setTagInput("")
+                setIsbn("")
+                setPublishedYear("")
+                setLanguage("en")
+                setError("")
+              }}
+              disabled={loading}
+              className="px-6"
+            >
+              Cancel
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>

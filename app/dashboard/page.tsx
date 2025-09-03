@@ -1,15 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "@/components/providers/auth-provider"
+import { useAuth } from "@/hooks/use-auth"
 import { Header } from "@/components/layout/header"
 import { DashboardStats } from "@/components/dashboard/dashboard-stats"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { UserProfile } from "@/components/dashboard/user-profile"
+import { ReadingStatsDashboard } from "@/components/dashboard/reading-progress"
+import { ReadingList } from "@/components/catalog/bookmark-button"
+import { DashboardErrorBoundary } from "@/components/ui/error-boundary"
+import { DashboardStatsSkeleton } from "@/components/ui/skeletons"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ebookService } from "@/lib/ebook-service"
 import { downloadService } from "@/lib/download-service"
-import { Plus, BookOpen } from "lucide-react"
+import { Plus, BookOpen, TrendingUp, Bookmark, Activity } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import type { Ebook, Download } from "@/lib/database-schema"
@@ -57,18 +63,7 @@ export default function DashboardPage() {
         <Header />
         <main className="container mx-auto py-8 px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-muted rounded w-1/3"></div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-32 bg-muted rounded"></div>
-                ))}
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="h-64 bg-muted rounded"></div>
-                <div className="h-64 bg-muted rounded"></div>
-              </div>
-            </div>
+            <DashboardStatsSkeleton />
           </div>
         </main>
       </div>
@@ -93,46 +88,135 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto py-8 px-4">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Page Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-sans font-bold">Dashboard</h1>
-              <p className="text-muted-foreground">Welcome back, {user.name}</p>
+    <DashboardErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto py-8 px-4">
+          <div className="max-w-7xl mx-auto space-y-8">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-4xl font-sans font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                  Dashboard
+                </h1>
+                <p className="text-lg text-muted-foreground">Welcome back, {user.name}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button asChild className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
+                  <Link href="/upload">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Upload Book
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/catalog">
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Browse Catalog
+                  </Link>
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button asChild>
-                <Link href="/upload">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Upload Book
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/catalog">
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Browse Catalog
-                </Link>
-              </Button>
-            </div>
-          </div>
 
-          {/* Stats Cards */}
-          <DashboardStats stats={stats} />
+            {/* Dashboard Tabs */}
+            <Tabs defaultValue="overview" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4 bg-card/50 backdrop-blur-sm">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="reading" className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Reading
+                </TabsTrigger>
+                <TabsTrigger value="bookmarks" className="flex items-center gap-2">
+                  <Bookmark className="h-4 w-4" />
+                  Bookmarks
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Activity
+                </TabsTrigger>
+              </TabsList>
 
-          {/* Profile and Activity */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <UserProfile user={user} stats={profileStats} />
-            </div>
-            <div className="lg:col-span-2">
-              <RecentActivity recentUploads={userEbooks} recentDownloads={recentDownloads} ebooks={allEbooks} />
-            </div>
+              <TabsContent value="overview" className="space-y-6">
+                {/* Stats Cards */}
+                <DashboardStats stats={stats} />
+
+                {/* Profile and Activity Overview */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-1">
+                    <UserProfile user={user} stats={profileStats} />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <RecentActivity 
+                      recentUploads={userEbooks} 
+                      recentDownloads={recentDownloads} 
+                      ebooks={allEbooks} 
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="reading" className="space-y-6">
+                <Card className="glass">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
+                      Reading Progress & Statistics
+                    </CardTitle>
+                    <CardDescription>
+                      Track your reading progress, see statistics, and manage your reading goals.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ReadingStatsDashboard />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="bookmarks" className="space-y-6">
+                <Card className="glass">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Bookmark className="h-5 w-5" />
+                      Your Reading List
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your bookmarked ebooks and reading notes.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ReadingList />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="activity" className="space-y-6">
+                <div className="grid grid-cols-1 gap-6">
+                  <Card className="glass">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Activity className="h-5 w-5" />
+                        Recent Activity
+                      </CardTitle>
+                      <CardDescription>
+                        Your recent uploads, downloads, and interactions.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <RecentActivity 
+                        recentUploads={userEbooks} 
+                        recentDownloads={recentDownloads} 
+                        ebooks={allEbooks}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </DashboardErrorBoundary>
   )
 }

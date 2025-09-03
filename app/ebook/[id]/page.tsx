@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Download, User, ArrowLeft, Loader2 } from "lucide-react"
+import { Download, User, ArrowLeft, Loader2, BookOpen, Eye, PlayCircle, FileText } from "lucide-react"
 import { ebookService } from "@/lib/ebook-service"
 import { downloadService } from "@/lib/download-service"
 import { EbookCard } from "@/components/catalog/ebook-card"
@@ -26,6 +26,9 @@ export default function EbookDetailPage() {
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [hasDownloaded, setHasDownloaded] = useState(false)
+
+  // Check if file is PDF
+  const isPDF = ebook?.fileName?.toLowerCase().endsWith('.pdf') || ebook?.fileName?.toLowerCase().includes('.pdf')
 
   useEffect(() => {
     if (params.id) {
@@ -186,7 +189,48 @@ export default function EbookDetailPage() {
                 </div>
 
                 <div className="lg:w-64 space-y-4">
-                  <Button onClick={handleDownload} size="lg" className="w-full" disabled={downloading}>
+                  {/* Read Now Button - Enhanced for PDF */}
+                  <Button 
+                    asChild 
+                    size="lg" 
+                    className={`w-full transition-all duration-300 ${
+                      isPDF 
+                        ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-red-500/25" 
+                        : "bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                    }`}
+                  >
+                    <Link href={`/read/${ebook.$id}`} className="flex items-center justify-center gap-2">
+                      {isPDF ? (
+                        <>
+                          <PlayCircle className="h-5 w-5" />
+                          <span className="font-semibold">Read PDF Now</span>
+                        </>
+                      ) : (
+                        <>
+                          <BookOpen className="h-4 w-4" />
+                          <span>Read Now</span>
+                        </>
+                      )}
+                    </Link>
+                  </Button>
+
+                  {isPDF && (
+                    <div className="text-center">
+                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        <FileText className="h-3 w-3 mr-1" />
+                        Interactive PDF Reader
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Download Button */}
+                  <Button 
+                    onClick={handleDownload} 
+                    size="lg" 
+                    variant="outline"
+                    className="w-full" 
+                    disabled={downloading}
+                  >
                     {downloading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

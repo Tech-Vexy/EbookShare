@@ -249,10 +249,48 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-border/50 mt-12 pt-8 text-center">
-            <p className="text-muted-foreground">
-              &copy; 2024 <span className="gradient-text font-semibold">EbookShare</span>. Built for the developer community with ❤️
-            </p>
+          <div className="border-t border-border/50 mt-12 pt-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <p className="text-muted-foreground text-center md:text-left">
+                &copy; 2024 <span className="gradient-text font-semibold">EbookShare</span>. Built for the developer community with ❤️
+              </p>
+              
+              {/* Powered by Appwrite */}
+              <a 
+                href="https://appwrite.io" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 border border-pink-500/20 rounded-lg transition-all duration-300 hover-lift group"
+              >
+                <svg 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 256 256" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-pink-500 group-hover:text-pink-400 transition-colors duration-200"
+                >
+                  <path 
+                    d="M128 0L256 85.333v85.334L128 256 0 170.667V85.333L128 0z" 
+                    fill="url(#appwrite-gradient)"
+                  />
+                  <defs>
+                    <linearGradient id="appwrite-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#fd366e" />
+                      <stop offset="100%" stopColor="#f02e65" />
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    d="M128 64l64 42.667v42.666L128 192 64 149.333v-42.666L128 64z" 
+                    fill="white" 
+                    opacity="0.9"
+                  />
+                </svg>
+                <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-200">
+                  Powered by <span className="text-pink-500 group-hover:text-pink-400 font-semibold">Appwrite</span>
+                </span>
+              </a>
+            </div>
           </div>
         </div>
       </footer>

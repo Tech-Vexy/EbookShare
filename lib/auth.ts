@@ -7,6 +7,7 @@ export interface AuthUser {
   email: string
   name: string
   emailVerification: boolean
+  $createdAt: string
 }
 
 export class AuthService {

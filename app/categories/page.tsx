@@ -4,8 +4,11 @@ import { useState, useEffect } from "react"
 import { Header } from "@/components/layout/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { BookOpen, ArrowRight } from "lucide-react"
+import { BookOpen, ArrowRight, Plus } from "lucide-react"
 import { ebookService } from "@/lib/ebook-service"
+import { CreateCategoryForm } from "@/components/categories/create-category-form"
+import { CategoryColorDot } from "@/components/categories/category-color-dot"
+import { CategoryManagement } from "@/components/categories/category-management"
 import type { Category } from "@/lib/database-schema"
 import Link from "next/link"
 
@@ -26,6 +29,20 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleCategoryCreated = (newCategory: Category) => {
+    setCategories(prev => [...prev, newCategory])
+  }
+
+  const handleCategoryUpdated = (updatedCategory: Category) => {
+    setCategories(prev => 
+      prev.map(cat => cat.$id === updatedCategory.$id ? updatedCategory : cat)
+    )
+  }
+
+  const handleCategoryDeleted = (categoryId: string) => {
+    setCategories(prev => prev.filter(cat => cat.$id !== categoryId))
   }
 
   if (loading) {
@@ -55,15 +72,30 @@ export default function CategoriesPage() {
       <main className="container mx-auto py-8 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Page Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-sans font-bold mb-4">Browse by Category</h1>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Explore our curated collection of technical ebooks organized by subject area
-            </p>
+          <div className="flex items-center justify-between mb-12">
+            <div className="text-center flex-1">
+              <h1 className="text-3xl font-sans font-bold mb-4">Browse by Category</h1>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Explore our curated collection of technical ebooks organized by subject area
+              </p>
+            </div>
+            <div className="ml-6">
+              <CreateCategoryForm 
+                onCategoryCreated={handleCategoryCreated}
+                trigger="button"
+              />
+            </div>
           </div>
 
           {/* Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Add Category Card */}
+            <CreateCategoryForm 
+              onCategoryCreated={handleCategoryCreated}
+              trigger="card"
+            />
+            
+            {/* Existing Categories */}
             {categories.map((category) => (
               <Card
                 key={category.$id}
@@ -82,7 +114,14 @@ export default function CategoriesPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: category.color }} />
+                    <div className="flex items-center gap-2">
+                      <CategoryColorDot color={category.color} />
+                      <CategoryManagement
+                        category={category}
+                        onCategoryUpdated={handleCategoryUpdated}
+                        onCategoryDeleted={handleCategoryDeleted}
+                      />
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">

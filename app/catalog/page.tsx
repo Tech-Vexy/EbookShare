@@ -1,28 +1,50 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/layout/header"
-import { SearchFilters } from "@/components/catalog/search-filters"
+import { AdvancedSearch } from "@/components/catalog/advanced-search"
 import { EbookGrid } from "@/components/catalog/ebook-grid"
 import { Button } from "@/components/ui/button"
+import { CatalogErrorBoundary } from "@/components/ui/error-boundary"
+import { EbookGridSkeleton } from "@/components/ui/skeletons"
 import { ebookService } from "@/lib/ebook-service"
 import type { Ebook, Category } from "@/lib/database-schema"
 
 const ITEMS_PER_PAGE = 12
 
-export default function CatalogPage() {
+interface SearchFilters {
+  query: string
+  categories: string[]
+  languages: string[]
+  authors: string[]
+  tags: string[]
+  sortBy: "newest" | "oldest" | "downloads" | "title" | "relevance"
+  minFileSize: number
+  maxFileSize: number
+  yearRange: [number, number]
+}
+
+function CatalogContent() {
   const searchParams = useSearchParams()
   const [ebooks, setEbooks] = useState<Ebook[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [search, setSearch] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState<string | undefined>()
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "downloads" | "title">("newest")
   const [currentPage, setCurrentPage] = useState(1)
   const [totalEbooks, setTotalEbooks] = useState(0)
   const [hasMore, setHasMore] = useState(true)
+  const [activeFilters, setActiveFilters] = useState<SearchFilters>({
+    query: "",
+    categories: [],
+    languages: [],
+    authors: [],
+    tags: [],
+    sortBy: "relevance",
+    minFileSize: 0,
+    maxFileSize: 500,
+    yearRange: [2000, new Date().getFullYear()],
+  })
 
   useEffect(() => {
     loadCategories()
@@ -30,18 +52,21 @@ export default function CatalogPage() {
 
   useEffect(() => {
     // Handle URL parameters
-    const categoryParam = searchParams.get("category")
-    const searchParam = searchParams.get("search")
-    const sortParam = searchParams.get("sort") as "newest" | "oldest" | "downloads" | "title"
+    const query = searchParams.get("q") || ""
+    const categories = searchParams.get("categories")?.split(",").filter(Boolean) || []
+    const sortBy = (searchParams.get("sort") as SearchFilters["sortBy"]) || "relevance"
 
-    if (categoryParam) setCategoryFilter(categoryParam)
-    if (searchParam) setSearch(searchParam)
-    if (sortParam) setSortBy(sortParam)
+    setActiveFilters(prev => ({
+      ...prev,
+      query,
+      categories,
+      sortBy,
+    }))
   }, [searchParams])
 
   useEffect(() => {
     loadEbooks(true)
-  }, [search, categoryFilter, sortBy])
+  }, [activeFilters])
 
   const loadCategories = async () => {
     try {
@@ -64,9 +89,9 @@ export default function CatalogPage() {
       const offset = reset ? 0 : (currentPage - 1) * ITEMS_PER_PAGE
 
       const { ebooks: newEbooks, total } = await ebookService.getEbooks({
-        search: search || undefined,
-        categoryId: categoryFilter,
-        sortBy,
+        search: activeFilters.query || undefined,
+        categoryId: activeFilters.categories[0], // Use first category for now
+        sortBy: activeFilters.sortBy === "relevance" ? "newest" : activeFilters.sortBy,
         limit: ITEMS_PER_PAGE,
         offset,
       })
@@ -81,6 +106,7 @@ export default function CatalogPage() {
       setHasMore(offset + newEbooks.length < total)
     } catch (error) {
       console.error("Failed to load ebooks:", error)
+      throw error // Re-throw to be caught by error boundary
     } finally {
       setLoading(false)
       setLoadingMore(false)
@@ -92,16 +118,8 @@ export default function CatalogPage() {
     loadEbooks(false)
   }
 
-  const handleSearch = (query: string) => {
-    setSearch(query)
-  }
-
-  const handleCategoryFilter = (categoryId: string | undefined) => {
-    setCategoryFilter(categoryId)
-  }
-
-  const handleSortChange = (newSortBy: "newest" | "oldest" | "downloads" | "title") => {
-    setSortBy(newSortBy)
+  const handleSearch = (filters: SearchFilters) => {
+    setActiveFilters(filters)
   }
 
   return (
@@ -111,51 +129,139 @@ export default function CatalogPage() {
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-sans font-bold mb-2">Ebook Catalog</h1>
-            <p className="text-muted-foreground">Discover and download technical ebooks from our community library</p>
+            <h1 className="text-4xl font-sans font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              Ebook Catalog
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Discover and download technical ebooks from our community library. Use advanced filters to find exactly what you're looking for.
+            </p>
           </div>
 
-          {/* Search and Filters */}
+          {/* Advanced Search */}
           <div className="mb-8">
-            <SearchFilters
+            <AdvancedSearch
               categories={categories}
               onSearch={handleSearch}
-              onCategoryFilter={handleCategoryFilter}
-              onSortChange={handleSortChange}
-              currentSearch={search}
-              currentCategory={categoryFilter}
-              currentSort={sortBy}
+              className="bg-card/30 backdrop-blur-sm rounded-xl p-6 border border-border/50"
             />
           </div>
 
-          {/* Results Count */}
+          {/* Results Count and Stats */}
           {!loading && (
-            <div className="mb-6">
-              <p className="text-sm text-muted-foreground">
-                Showing {ebooks.length} of {totalEbooks} ebooks
-                {categoryFilter && categories.length > 0 && (
-                  <span>
-                    {" "}
-                    in <span className="font-medium">{categories.find((cat) => cat.$id === categoryFilter)?.name}</span>
-                  </span>
-                )}
-              </p>
+            <div className="mb-6 flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Showing <span className="font-semibold text-foreground">{ebooks.length}</span> of{" "}
+                  <span className="font-semibold text-foreground">{totalEbooks}</span> ebooks
+                  {activeFilters.categories.length > 0 && (
+                    <span>
+                      {" "}in{" "}
+                      <span className="font-medium text-primary">
+                        {activeFilters.categories
+                          .map(catId => categories.find(cat => cat.$id === catId)?.name)
+                          .filter(Boolean)
+                          .join(", ")}
+                      </span>
+                    </span>
+                  )}
+                </p>
+              </div>
+              {totalEbooks > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Sorted by <span className="font-medium capitalize">{activeFilters.sortBy}</span>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Ebook Grid */}
-          <EbookGrid ebooks={ebooks} categories={categories} loading={loading} />
+          {/* Loading State */}
+          {loading ? (
+            <EbookGridSkeleton count={12} />
+          ) : (
+            <>
+              {/* Ebook Grid */}
+              <EbookGrid 
+                ebooks={ebooks} 
+                categories={categories} 
+                loading={false}
+              />
 
-          {/* Load More Button */}
-          {!loading && hasMore && (
-            <div className="text-center mt-8">
-              <Button onClick={handleLoadMore} disabled={loadingMore} variant="outline" size="lg">
-                {loadingMore ? "Loading..." : "Load More Books"}
-              </Button>
-            </div>
+              {/* No Results */}
+              {ebooks.length === 0 && !loading && (
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+                    <svg 
+                      className="w-12 h-12 text-muted-foreground"
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">No ebooks found</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    We couldn't find any ebooks matching your search criteria. Try adjusting your filters or search terms.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleSearch({
+                      query: "",
+                      categories: [],
+                      languages: [],
+                      authors: [],
+                      tags: [],
+                      sortBy: "relevance",
+                      minFileSize: 0,
+                      maxFileSize: 500,
+                      yearRange: [2000, new Date().getFullYear()],
+                    })}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+
+              {/* Load More Button */}
+              {!loading && hasMore && ebooks.length > 0 && (
+                <div className="text-center mt-12">
+                  <Button 
+                    onClick={handleLoadMore} 
+                    disabled={loadingMore} 
+                    variant="outline" 
+                    size="lg"
+                    className="min-w-[200px] bg-card/50 backdrop-blur-sm hover:bg-card border-border/50"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        Load More Books
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          ({totalEbooks - ebooks.length} remaining)
+                        </span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
     </div>
+  )
+}
+
+export default function CatalogPage() {
+  return (
+    <CatalogErrorBoundary>
+      <Suspense fallback={<EbookGridSkeleton count={12} />}>
+        <CatalogContent />
+      </Suspense>
+    </CatalogErrorBoundary>
   )
 }

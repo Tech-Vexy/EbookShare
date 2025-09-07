@@ -91,6 +91,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <title>EbookShare - Modern Ebook Sharing Platform</title>
+        <meta name="description" content="Share and discover essential computer science and software engineering ebooks with our vibrant community." />
+
+        <meta property="og:url" content="https://ebookshare.appwrite.network/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="EbookShare - Modern Ebook Sharing Platform" />
+        <meta property="og:description" content="Share and discover essential computer science and software engineering ebooks with our vibrant community." />
+        <meta property="og:image" content="https://opengraph.b-cdn.net/production/images/28f498ee-497a-456c-b460-833f3a2cf548.png?token=_BXOzIXa1sbLp8zvG4BtNqJyUJP9Z3cuV8YnHcZJWu4&height=512&width=512&expires=33293275498" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:domain" content="ebookshare.appwrite.network" />
+        <meta property="twitter:url" content="https://ebookshare.appwrite.network/" />
+        <meta name="twitter:title" content="EbookShare - Modern Ebook Sharing Platform" />
+        <meta name="twitter:description" content="Share and discover essential computer science and software engineering ebooks with our vibrant community." />
+        <meta name="twitter:image" content="https://opengraph.b-cdn.net/production/images/28f498ee-497a-456c-b460-833f3a2cf548.png?token=_BXOzIXa1sbLp8zvG4BtNqJyUJP9Z3cuV8YnHcZJWu4&height=512&width=512&expires=33293275498" />
+
+        {/* Meta Tags Generated via https://www.opengraph.xyz */}
+      </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={<div>Loading...</div>}>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>

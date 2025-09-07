@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
+import Image from "next/image"
 import { useAuth } from "@/components/providers/auth-provider"
 import { Header } from "@/components/layout/header"
 import { Button } from "@/components/ui/button"
@@ -26,9 +27,19 @@ export default function EbookDetailPage() {
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [hasDownloaded, setHasDownloaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   // Check if file is PDF
   const isPDF = ebook?.fileName?.toLowerCase().endsWith('.pdf') || ebook?.fileName?.toLowerCase().includes('.pdf')
+
+  // Get cover image URL
+  const getCoverImageSrc = () => {
+    if (!ebook || imageError) return "/placeholder.jpg"
+    if (ebook.coverImageId) {
+      return ebookService.getCoverImageUrl(ebook.coverImageId)
+    }
+    return ebook.coverImage || "/placeholder.jpg"
+  }
 
   useEffect(() => {
     if (params.id) {
@@ -170,6 +181,20 @@ export default function EbookDetailPage() {
           <Card className="mb-8">
             <CardHeader>
               <div className="flex flex-col lg:flex-row gap-6">
+                {/* Cover Image */}
+                <div className="lg:w-48 flex-shrink-0">
+                  <div className="relative aspect-[3/4] w-full max-w-48 mx-auto lg:mx-0">
+                    <Image
+                      src={getCoverImageSrc()}
+                      alt={`${ebook.title} cover`}
+                      fill
+                      className="object-cover rounded-lg shadow-lg"
+                      onError={() => setImageError(true)}
+                      priority
+                    />
+                  </div>
+                </div>
+
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <CardTitle className="text-2xl font-sans leading-tight">{ebook.title}</CardTitle>

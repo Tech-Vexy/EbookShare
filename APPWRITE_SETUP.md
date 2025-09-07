@@ -59,6 +59,7 @@ NEXT_PUBLIC_APPWRITE_EBOOKS_BUCKET_ID=ebooks
    - `fileName` (String, 255, Required)
    - `fileSize` (Integer, Required)
    - `coverImage` (String, 500, Optional)
+   - `coverImageId` (String, 255, Optional)
    - `categoryId` (String, 255, Required)
    - `uploaderId` (String, 255, Required)
    - `downloadCount` (Integer, Required, Default: 0)
@@ -75,12 +76,20 @@ NEXT_PUBLIC_APPWRITE_EBOOKS_BUCKET_ID=ebooks
    - `ebookId` (String, 255, Required)
    - `downloadedAt` (DateTime, Required)
 
-### 4. Create Storage Bucket
+### 4. Create Storage Buckets
+
+#### Ebooks Bucket
 1. Go to Storage in your Appwrite console
 2. Create a new bucket with ID: `ebooks`
 3. Set file size limit to 50MB
 4. Allow file extensions: pdf
 5. Set permissions to allow authenticated users to create/read
+
+#### Cover Images Bucket
+1. Create a new bucket with ID: `cover-images`
+2. Set file size limit to 5MB
+3. Allow file extensions: jpg, jpeg, png, gif, webp
+4. Set permissions to allow authenticated users to create/read
 
 ### 5. Set Permissions
 

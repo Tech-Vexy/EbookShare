@@ -20,6 +20,8 @@ import type { Category } from "@/lib/database-schema"
 export function UploadForm() {
   const { user } = useAuth()
   const [file, setFile] = useState<File | null>(null)
+  const [coverImage, setCoverImage] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string>("")
   const [title, setTitle] = useState("")
   const [author, setAuthor] = useState("")
   const [description, setDescription] = useState("")
@@ -77,6 +79,27 @@ export function UploadForm() {
     }
   }
 
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedImage = e.target.files?.[0]
+    if (selectedImage) {
+      if (!selectedImage.type.startsWith("image/")) {
+        setError("Please select a valid image file for the cover.")
+        setCoverImage(null)
+        setCoverPreview("")
+        return
+      }
+      if (selectedImage.size > 5 * 1024 * 1024) {
+        setError("Cover image size must be less than 5MB.")
+        setCoverImage(null)
+        setCoverPreview("")
+        return
+      }
+      setCoverImage(selectedImage)
+      setError("")
+      setCoverPreview(URL.createObjectURL(selectedImage))
+    }
+  }
+
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault()
@@ -93,7 +116,7 @@ export function UploadForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !file) return
+  if (!user || !file) return
 
     setError("")
     setLoading(true)
@@ -101,34 +124,41 @@ export function UploadForm() {
     try {
       // Upload file to storage
       const fileId = await ebookService.uploadFile(file)
+      let coverImageId: string | undefined = undefined
+      if (coverImage) {
+        coverImageId = await ebookService.uploadCoverImage(coverImage)
+      }
 
       // Create ebook record
       await ebookService.createEbook({
-        title,
-        author,
-        description,
-        fileId,
-        fileName: file.name,
-        fileSize: file.size,
-        categoryId,
-        uploaderId: user.$id,
-        tags,
-        isbn: isbn || undefined,
-        publishedYear: publishedYear ? Number.parseInt(publishedYear) : undefined,
-        language,
+  title,
+  author,
+  description,
+  fileId,
+  fileName: file.name,
+  fileSize: file.size,
+  categoryId,
+  uploaderId: user.$id,
+  tags,
+  isbn: isbn || undefined,
+  publishedYear: publishedYear ? Number.parseInt(publishedYear) : undefined,
+  language,
+  coverImageId,
       })
 
       setSuccess(true)
-      // Reset form
-      setFile(null)
-      setTitle("")
-      setAuthor("")
-      setDescription("")
-      setCategoryId("")
-      setTags([])
-      setIsbn("")
-      setPublishedYear("")
-      setLanguage("en")
+  // Reset form
+  setFile(null)
+  setCoverImage(null)
+  setCoverPreview("")
+  setTitle("")
+  setAuthor("")
+  setDescription("")
+  setCategoryId("")
+  setTags([])
+  setIsbn("")
+  setPublishedYear("")
+  setLanguage("en")
     } catch (error: any) {
       setError(error.message || "Failed to upload ebook. Please try again.")
     } finally {
@@ -210,6 +240,52 @@ export function UploadForm() {
                 disabled={loading}
                 title="Select PDF file to upload"
                 aria-label="Select PDF file to upload"
+              />
+            </div>
+          </div>
+
+          {/* Cover Image Upload */}
+          <div className="space-y-2">
+            <Label htmlFor="coverImage">Cover Image (optional)</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center relative">
+              {coverImage ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <img src={coverPreview} alt="Cover Preview" className="h-20 w-16 object-cover rounded shadow" />
+                  <div>
+                    <p className="font-medium">{coverImage.name}</p>
+                    <p className="text-sm text-muted-foreground">{(coverImage.size / 1024 / 1024).toFixed(2)} MB</p>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setCoverImage(null)
+                      setCoverPreview("")
+                    }} 
+                    className="ml-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label htmlFor="coverImage" className="cursor-pointer block">
+                  <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground mb-2">Click to upload or drag and drop</p>
+                  <p className="text-xs text-muted-foreground">Image files only, max 5MB</p>
+                </label>
+              )}
+              <input
+                id="coverImage"
+                type="file"
+                accept="image/*"
+                onChange={handleCoverChange}
+                className="sr-only"
+                disabled={loading}
+                title="Select cover image to upload"
+                aria-label="Select cover image to upload"
               />
             </div>
           </div>
@@ -380,6 +456,8 @@ export function UploadForm() {
                 e.preventDefault()
                 // Reset the entire form
                 setFile(null)
+                setCoverImage(null)
+                setCoverPreview("")
                 setTitle("")
                 setAuthor("")
                 setDescription("")

@@ -252,7 +252,7 @@ export default function HomePage() {
           <div className="border-t border-border/50 mt-12 pt-8">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
               <p className="text-muted-foreground text-center md:text-left">
-                &copy; 2024 <span className="gradient-text font-semibold">EbookShare</span>. Built for the developer community with ❤️
+                &copy; 2025 <span className="gradient-text font-semibold">EbookShare</span>. Built for the developer community with ❤️
               </p>
               
               {/* Powered by Appwrite */}

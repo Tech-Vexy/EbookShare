@@ -1,0 +1,214 @@
+{
+  "collections": [
+    {
+      "name": "Users",
+      "id": "users",
+      "permissions": ["read(\"users\")", "create(\"users\")", "update(\"users\")", "delete(\"users\")"],
+      "attributes": [
+        {
+          "key": "email",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "avatar",
+          "type": "string",
+          "size": 500,
+          "required": false
+        },
+        {
+          "key": "bio",
+          "type": "string",
+          "size": 1000,
+          "required": false
+        },
+        {
+          "key": "role",
+          "type": "enum",
+          "elements": ["user", "admin"],
+          "required": true,
+          "default": "user"
+        },
+        {
+          "key": "uploadCount",
+          "type": "integer",
+          "required": true,
+          "default": 0
+        },
+        {
+          "key": "downloadCount",
+          "type": "integer",
+          "required": true,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "id": "categories",
+      "permissions": ["read(\"any\")", "create(\"users\")", "update(\"users\")", "delete(\"users\")"],
+      "attributes": [
+        {
+          "key": "name",
+          "type": "string",
+          "size": 100,
+          "required": true
+        },
+        {
+          "key": "slug",
+          "type": "string",
+          "size": 100,
+          "required": true
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "size": 500,
+          "required": false
+        },
+        {
+          "key": "color",
+          "type": "string",
+          "size": 7,
+          "required": true,
+          "default": "#6366f1"
+        },
+        {
+          "key": "ebookCount",
+          "type": "integer",
+          "required": true,
+          "default": 0
+        }
+      ]
+    },
+    {
+      "name": "Ebooks",
+      "id": "ebooks",
+      "permissions": ["read(\"any\")", "create(\"users\")", "update(\"users\")", "delete(\"users\")"],
+      "attributes": [
+        {
+          "key": "title",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "author",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "description",
+          "type": "string",
+          "size": 2000,
+          "required": true
+        },
+        {
+          "key": "fileId",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "fileName",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "fileSize",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "key": "coverImage",
+          "type": "string",
+          "size": 500,
+          "required": false
+        },
+        {
+          "key": "categoryId",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "uploaderId",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "downloadCount",
+          "type": "integer",
+          "required": true,
+          "default": 0
+        },
+        {
+          "key": "tags",
+          "type": "string",
+          "size": 1000,
+          "required": false,
+          "array": true
+        },
+        {
+          "key": "isbn",
+          "type": "string",
+          "size": 20,
+          "required": false
+        },
+        {
+          "key": "publishedYear",
+          "type": "integer",
+          "required": false
+        },
+        {
+          "key": "language",
+          "type": "string",
+          "size": 10,
+          "required": true,
+          "default": "en"
+        },
+        {
+          "key": "status",
+          "type": "enum",
+          "elements": ["active", "pending", "rejected"],
+          "required": true,
+          "default": "pending"
+        }
+      ]
+    },
+    {
+      "name": "Downloads",
+      "id": "downloads",
+      "permissions": ["read(\"users\")", "create(\"users\")", "update(\"users\")", "delete(\"users\")"],
+      "attributes": [
+        {
+          "key": "userId",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "ebookId",
+          "type": "string",
+          "size": 255,
+          "required": true
+        },
+        {
+          "key": "downloadedAt",
+          "type": "datetime",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

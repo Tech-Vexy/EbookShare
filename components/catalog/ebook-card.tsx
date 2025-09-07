@@ -52,6 +52,15 @@ export function EbookCard({
   // Check if file is a PDF
   const isPDF = isPDFFile(ebook.fileName)
 
+  // Get cover image URL
+  const getCoverImageSrc = () => {
+    if (imageError) return "/placeholder.jpg"
+    if (ebook.coverImageId) {
+      return ebookService.getCoverImageUrl(ebook.coverImageId)
+    }
+    return ebook.coverImage || "/placeholder.jpg"
+  }
+
   const formatFileSize = (bytes: number) => {
     const mb = bytes / (1024 * 1024)
     return `${mb.toFixed(1)} MB`
@@ -107,7 +116,7 @@ export function EbookCard({
           <div className="flex gap-3">
             <div className="relative w-16 h-20 flex-shrink-0">
               <Image
-                src={imageError ? "/placeholder.jpg" : ebook.coverImage || "/placeholder.jpg"}
+                src={getCoverImageSrc()}
                 alt={ebook.title}
                 fill
                 className="object-cover rounded-md"
@@ -176,7 +185,7 @@ export function EbookCard({
       )}>
         <div className="relative aspect-[3/4] overflow-hidden">
           <Image
-            src={imageError ? "/placeholder.jpg" : ebook.coverImage || "/placeholder.jpg"}
+            src={getCoverImageSrc()}
             alt={ebook.title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"

@@ -5,6 +5,7 @@ import {
   EBOOKS_COLLECTION_ID,
   CATEGORIES_COLLECTION_ID,
   EBOOKS_BUCKET_ID,
+  COVER_IMAGES_BUCKET_ID,
   Query,
 } from "./appwrite"
 import { ID } from "appwrite"
@@ -22,6 +23,27 @@ export class EbookService {
     }
   }
 
+  // Upload cover image to storage
+  async uploadCoverImage(image: File): Promise<string> {
+    try {
+      const response = await storage.createFile(COVER_IMAGES_BUCKET_ID, ID.unique(), image)
+      return response.$id
+    } catch (error) {
+      console.error("Error uploading cover image:", error)
+      throw error
+    }
+  }
+
+  // Get cover image URL from storage
+  getCoverImageUrl(coverImageId: string): string {
+    try {
+      return storage.getFileView(COVER_IMAGES_BUCKET_ID, coverImageId)
+    } catch (error) {
+      console.error("Error getting cover image URL:", error)
+      return "/placeholder.jpg" // fallback to placeholder
+    }
+  }
+
   // Create ebook record in database
   async createEbook(ebookData: {
     title: string
@@ -36,13 +58,19 @@ export class EbookService {
     isbn?: string
     publishedYear?: number
     language: string
+    coverImageId?: string
   }): Promise<Ebook> {
     try {
+      // Create the ebook document
       const response = await databases.createDocument(DATABASE_ID, EBOOKS_COLLECTION_ID, ID.unique(), {
         ...ebookData,
         downloadCount: 0,
         status: "active",
       })
+
+      // Increment the category's ebook count
+      await this.incrementCategoryCount(ebookData.categoryId)
+
       return {
         title: response.title,
         author: response.author,
@@ -50,6 +78,7 @@ export class EbookService {
         fileId: response.fileId,
         fileName: response.fileName,
         fileSize: response.fileSize,
+        coverImageId: response.coverImageId,
         categoryId: response.categoryId,
         uploaderId: response.uploaderId,
         tags: response.tags,
@@ -78,6 +107,13 @@ export class EbookService {
         console.error("❌ Appwrite collections not found. Please run the setup script first.")
         console.error("📖 See APPWRITE_SETUP.md for detailed setup instructions.")
         return false
+      }
+      if (error.message?.includes("Failed to fetch") || error.name === "TypeError") {
+        console.error("❌ Network error: Unable to connect to Appwrite. This might be caused by:")
+        console.error("   • Browser extension blocking requests (try disabling ad blockers)")
+        console.error("   • Network connectivity issues")
+        console.error("   • Incorrect Appwrite endpoint configuration")
+        throw new Error("Unable to connect to Appwrite. Please check your network connection and disable any ad blockers.")
       }
       throw error
     }
@@ -171,6 +207,46 @@ export class EbookService {
     }
   }
 
+  // Helper method to increment category ebook count
+  private async incrementCategoryCount(categoryId: string): Promise<void> {
+    try {
+      // Get current category to read the current count
+      const category = await databases.getDocument(DATABASE_ID, CATEGORIES_COLLECTION_ID, categoryId)
+      const currentCount = category.ebookCount || 0
+      
+      // Update with incremented count
+      await databases.updateDocument(DATABASE_ID, CATEGORIES_COLLECTION_ID, categoryId, {
+        ebookCount: currentCount + 1
+      })
+      
+      console.log(`✅ Incremented category ${categoryId} book count to ${currentCount + 1}`)
+    } catch (error) {
+      console.error("Error incrementing category count:", error)
+      // Don't throw error to prevent ebook creation failure
+      // Log the error but continue with ebook creation
+    }
+  }
+
+  // Helper method to decrement category ebook count
+  private async decrementCategoryCount(categoryId: string): Promise<void> {
+    try {
+      // Get current category to read the current count
+      const category = await databases.getDocument(DATABASE_ID, CATEGORIES_COLLECTION_ID, categoryId)
+      const currentCount = category.ebookCount || 0
+      
+      // Update with decremented count (but not below 0)
+      const newCount = Math.max(0, currentCount - 1)
+      await databases.updateDocument(DATABASE_ID, CATEGORIES_COLLECTION_ID, categoryId, {
+        ebookCount: newCount
+      })
+      
+      console.log(`✅ Decremented category ${categoryId} book count to ${newCount}`)
+    } catch (error) {
+      console.error("Error decrementing category count:", error)
+      // Don't throw error to prevent ebook deletion failure
+    }
+  }
+
   // Get ebooks by user
   async getEbooksByUser(userId: string): Promise<Ebook[]> {
     try {
@@ -258,6 +334,7 @@ export class EbookService {
           fileId: doc.fileId,
           fileName: doc.fileName,
           fileSize: doc.fileSize,
+          coverImageId: doc.coverImageId,
           categoryId: doc.categoryId,
           uploaderId: doc.uploaderId,
           tags: doc.tags,
@@ -327,6 +404,7 @@ export class EbookService {
         fileId: response.fileId,
         fileName: response.fileName,
         fileSize: response.fileSize,
+        coverImageId: response.coverImageId,
         categoryId: response.categoryId,
         uploaderId: response.uploaderId,
         tags: response.tags,

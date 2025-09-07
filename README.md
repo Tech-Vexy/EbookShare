@@ -95,9 +95,11 @@ pnpm run setup:appwrite
 ```
 
 ### 3. Storage Setup
-1. Create a storage bucket named "ebooks"
+1. Create storage buckets:
+   - "ebooks" for PDF files (50MB limit, pdf extension)
+   - "cover-images" for book covers (5MB limit, image extensions)
 2. Configure file permissions for authenticated users
-3. Add the bucket ID to your environment variables
+3. Add the bucket IDs to your environment variables
 
 ### 4. Authentication Setup
 1. Enable Email/Password authentication

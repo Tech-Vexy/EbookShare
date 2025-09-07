@@ -4,10 +4,9 @@ import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/layout/header"
 import { AdvancedSearch } from "@/components/catalog/advanced-search"
-import { EbookGrid } from "@/components/catalog/ebook-grid"
+import { CoverGrid } from "@/components/catalog/cover-grid"
 import { Button } from "@/components/ui/button"
 import { CatalogErrorBoundary } from "@/components/ui/error-boundary"
-import { EbookGridSkeleton } from "@/components/ui/skeletons"
 import { ebookService } from "@/lib/ebook-service"
 import type { Ebook, Category } from "@/lib/database-schema"
 
@@ -125,10 +124,10 @@ function CatalogContent() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto py-8 px-4">
+      <main className="container mx-auto py-12 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-12">
             <h1 className="text-4xl font-sans font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
               Ebook Catalog
             </h1>
@@ -174,81 +173,74 @@ function CatalogContent() {
             </div>
           )}
 
-          {/* Loading State */}
-          {loading ? (
-            <EbookGridSkeleton count={12} />
-          ) : (
-            <>
-              {/* Ebook Grid */}
-              <EbookGrid 
-                ebooks={ebooks} 
-                categories={categories} 
-                loading={false}
-              />
+          {/* Ebook Grid */}
+          <CoverGrid 
+            ebooks={ebooks} 
+            categories={categories} 
+            loading={loading}
+          />
 
-              {/* No Results */}
-              {ebooks.length === 0 && !loading && (
-                <div className="text-center py-16">
-                  <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
-                    <svg 
-                      className="w-12 h-12 text-muted-foreground"
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">No ebooks found</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    We couldn't find any ebooks matching your search criteria. Try adjusting your filters or search terms.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleSearch({
-                      query: "",
-                      categories: [],
-                      languages: [],
-                      authors: [],
-                      tags: [],
-                      sortBy: "relevance",
-                      minFileSize: 0,
-                      maxFileSize: 500,
-                      yearRange: [2000, new Date().getFullYear()],
-                    })}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              )}
+          {/* No Results */}
+          {ebooks.length === 0 && !loading && (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+                <svg 
+                  className="w-12 h-12 text-muted-foreground"
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No ebooks found</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                We couldn't find any ebooks matching your search criteria. Try adjusting your filters or search terms.
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => handleSearch({
+                  query: "",
+                  categories: [],
+                  languages: [],
+                  authors: [],
+                  tags: [],
+                  sortBy: "relevance",
+                  minFileSize: 0,
+                  maxFileSize: 500,
+                  yearRange: [2000, new Date().getFullYear()],
+                })}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
 
-              {/* Load More Button */}
-              {!loading && hasMore && ebooks.length > 0 && (
-                <div className="text-center mt-12">
-                  <Button 
-                    onClick={handleLoadMore} 
-                    disabled={loadingMore} 
-                    variant="outline" 
-                    size="lg"
-                    className="min-w-[200px] bg-card/50 backdrop-blur-sm hover:bg-card border-border/50"
-                  >
-                    {loadingMore ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        Load More Books
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          ({totalEbooks - ebooks.length} remaining)
-                        </span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </>
+          {/* Load More Button */}
+          {!loading && hasMore && ebooks.length > 0 && (
+            <div className="text-center mt-12">
+              <Button 
+                onClick={handleLoadMore} 
+                disabled={loadingMore} 
+                variant="outline" 
+                size="lg"
+                className="min-w-[200px] bg-card/50 backdrop-blur-sm hover:bg-card border-border/50"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Load More Books
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      ({totalEbooks - ebooks.length} remaining)
+                    </span>
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </div>
       </main>
@@ -259,7 +251,18 @@ function CatalogContent() {
 export default function CatalogPage() {
   return (
     <CatalogErrorBoundary>
-      <Suspense fallback={<EbookGridSkeleton count={12} />}>
+      <Suspense fallback={
+        <div className="min-h-screen bg-background">
+          <Header />
+          <main className="container mx-auto py-12 px-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-6 md:gap-8">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <div key={index} className="aspect-[3/4] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-xl animate-pulse border border-gray-200/50 dark:border-gray-700/50" />
+              ))}
+            </div>
+          </main>
+        </div>
+      }>
         <CatalogContent />
       </Suspense>
     </CatalogErrorBoundary>

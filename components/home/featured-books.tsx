@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { EbookCard } from "@/components/catalog/ebook-card"
+import { CoverGrid } from "@/components/catalog/cover-grid"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, BookOpen, Lock } from "lucide-react"
 import { ebookService } from "@/lib/ebook-service"
@@ -128,18 +128,12 @@ export function FeaturedBooks() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          {ebooks.map((ebook, index) => {
-            const category = categories.find((cat) => cat.$id === ebook.categoryId)
-            return (
-              <div 
-                key={ebook.$id} 
-                className={`animate-slide-in-up`}
-              >
-                <EbookCard ebook={ebook} category={category} />
-              </div>
-            )
-          })}
+        <div className="mb-12">
+          <CoverGrid 
+            ebooks={ebooks} 
+            categories={categories} 
+            loading={false}
+          />
         </div>
 
         <div className="text-center">

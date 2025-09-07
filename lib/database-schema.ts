@@ -33,6 +33,7 @@ export interface Ebook {
   fileName: string
   fileSize: number
   coverImage?: string
+  coverImageId?: string
   categoryId: string
   uploaderId: string
   downloadCount: number

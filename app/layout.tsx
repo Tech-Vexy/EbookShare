@@ -35,14 +35,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://ebookshare.dev"),
+  metadataBase: new URL("https://ebookshare.appwrite.network/"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://ebookshare.dev",
+    url: "https://ebookshare.appwrite.network/",
     title: "EbookShare - Modern Ebook Sharing Platform",
     description: "Share and discover essential computer science and software engineering ebooks with our vibrant community.",
     siteName: "EbookShare",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     title: "EbookShare - Modern Ebook Sharing Platform",
     description: "Share and discover essential computer science and software engineering ebooks with our vibrant community.",
     images: ["/og-image.png"],
-    creator: "@ebookshare",
+    creator: "@EVeldrine",
   },
   icons: {
     icon: [
